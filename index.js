@@ -68,7 +68,7 @@ module.exports = function (mockDirectory, options = {}) {
   console.dir(pointToPath)
   console.log()
 
-  return function mock (req, res, next) {
+  return function mocker (req, res, next) {
     const originalUrl = req.originalUrl
     const pathname = req.path
     let point = null
@@ -106,11 +106,13 @@ module.exports = function (mockDirectory, options = {}) {
 
     console.log('Request from ' + chalk.cyan(`[${req.method}] ${originalUrl}`) + ' received.\n')
 
-    if (isFunction(mock)) {
-      mock(req, res, next)
-    } else {
       var methodDefined = false
       var returned = false
+
+      if (isFunction(mock)) {
+        mock = mock(req)
+      }
+
       for (let method in mock) {
         if (!method.startsWith('__')) {
           continue
@@ -126,10 +128,9 @@ module.exports = function (mockDirectory, options = {}) {
           returned = true
           mock = mock[method]
           if (isFunction(mock)) {
-            mock(req, res, next)
-          } else {
-            res.json(mock)
+            mock = mock(req)
           }
+          res.json(mock)
           break
         }
       }
@@ -147,6 +148,5 @@ module.exports = function (mockDirectory, options = {}) {
       } else {
         console.log('Response mock data in ' + chalk.cyan(filePath) + '\n')
       }
-    }
   }
 }
